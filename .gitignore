@@ -1,5 +1,11 @@
 cmake-build-debug
+CMakeFiles
+build
+env
 .idea
 
 *.o
 *.exe
+
+CMakeCache.txt
+CMakeUserPresets.json
