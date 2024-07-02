@@ -1,6 +1,42 @@
-cmake_minimum_required(VERSION 3.26)
-project(SolarSystem C)
+cmake_minimum_required(VERSION 3.16)
+project(SolarSystem)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-add_executable(SolarSystem main.c)
+if(WIN32)
+    execute_process(
+            COMMAND powershell -Command "(Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name 'ReleaseId').ReleaseId"
+            OUTPUT_VARIABLE WINDOW_BUILD_VER
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+    message(FATAL_ERROR "This script is intended for Windows only.")
+endif()
+
+if(NOT WINDOW_BUILD_VER)
+    message(FATAL_ERROR "Failed to retrieve Windows build version.")
+endif()
+
+
+set(OPENGL_LIBRARY C:/Program Files \(x86\)/Windows Kits/10/Lib/${WINDOW_BUILD_VER}/um/x64/OpenGL32.Lib)
+set(OPENGL_DLL C:/Windows/System32/opengl32.dll)
+set(OPENGL_INCLUDE_DIR "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22000.0/um")
+
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${OPENGL_INCLUDE_DIR})
+
+link_directories(${PROJECT_SOURCE_DIR}/lib)
+
+find_package(OpenGL REQUIRED)
+
+set(SOURCE_DIR source)
+
+
+set(SOURCES
+    ${SOURCE_DIR}/main.cpp
+)
+
+add_executable(SolarSystem ${SOURCES})
+
+target_link_libraries(SolarSystem glfw3 ${OPENGL_LIBRARY} opengl32)
