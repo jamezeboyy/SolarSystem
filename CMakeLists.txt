@@ -21,7 +21,7 @@ endif()
 
 set(OPENGL_LIBRARY C:/Program Files \(x86\)/Windows Kits/10/Lib/${WINDOW_BUILD_VER}/um/x64/OpenGL32.Lib)
 set(OPENGL_DLL C:/Windows/System32/opengl32.dll)
-set(OPENGL_INCLUDE_DIR "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22000.0/um")
+set(OPENGL_INCLUDE_DIR "C:/Program Files (x86)/Windows Kits/10/Include/${WINDOW_BUILD_VER}/um")
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${OPENGL_INCLUDE_DIR})
