@@ -17,6 +17,7 @@ int main() {
         return -1;
     }
 
+
     // Make the window's context current
     glfwMakeContextCurrent(window);
 
@@ -34,4 +35,10 @@ int main() {
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
+}
+
+
+void test()
+{
+
 }

@@ -18,15 +18,24 @@ if(NOT WINDOW_BUILD_VER)
     message(FATAL_ERROR "Failed to retrieve Windows build version.")
 endif()
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(ARCHITECTURE x64)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(ARCHITECTURE x86)
+else()
+    message("Unknown target architecture")
+endif()
+
+
 
 set(OPENGL_LIBRARY C:/Program Files \(x86\)/Windows Kits/10/Lib/${WINDOW_BUILD_VER}/um/x64/OpenGL32.Lib)
 set(OPENGL_DLL C:/Windows/System32/opengl32.dll)
 set(OPENGL_INCLUDE_DIR "C:/Program Files (x86)/Windows Kits/10/Include/${WINDOW_BUILD_VER}/um")
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${OPENGL_INCLUDE_DIR})
 
-link_directories(${PROJECT_SOURCE_DIR}/lib)
+include_directories(${PROJECT_SOURCE_DIR}/include/${ARCHITECTURE})
+link_directories(${PROJECT_SOURCE_DIR}/lib/${ARCHITECTURE})
 
 find_package(OpenGL REQUIRED)
 
