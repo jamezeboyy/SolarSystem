@@ -44,7 +44,14 @@ set(SOURCE_DIR source)
 
 set(SOURCES
     ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/core/util/debug_writer.cpp
 )
+
+set(HEADERS
+    ${SOURCE_DIR}/core/util/debug_writer.h
+)
+
+include_directories(${HEADERS})
 
 add_executable(SolarSystem ${SOURCES})
 

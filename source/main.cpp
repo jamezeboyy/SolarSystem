@@ -1,18 +1,21 @@
 #include "GLFW/glfw3.h"
 
 #include <iostream>
+#include "core/util/debug_writer.h"
 
 int main() {
+    using namespace SolarSystem::Core;
+    LOG_DECLARE
     // Initialize the library
     if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+        LOGL(LOG_LEVEL_ERROR, "Failed to initialize GLFW");
         return -1;
     }
 
     // Create a windowed mode window and its OpenGL context
     GLFWwindow* window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+        LOGL(LOG_LEVEL_ERROR, "Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
@@ -23,6 +26,7 @@ int main() {
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
+        LOG("In loop");
         // Render here
 
         // Swap front and back buffers
