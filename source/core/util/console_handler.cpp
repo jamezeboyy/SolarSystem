@@ -2,17 +2,18 @@
 
 #include "console_handler.h"
 
-#include <utility>
 #include <thread>
+#include <mutex>
 
 namespace SolarSystem
 {
     namespace Core
     {
 
-
         const char* COMMAND_PIPE_NAME = R"(\\.\pipe\SolarSystemDebugCommandPipe)";
         const char* RESPONSE_PIPE_NAME = R"(\\.\pipe\SolarSystemDebugResponsePipe)";
+
+        std::mutex mtxLog;
 
         CConsoleHandler::CConsoleHandler() :
                 mDebugStream(std::cout),
@@ -132,13 +133,13 @@ namespace SolarSystem
         void CConsoleHandler::stop()
         {
             // TODO uncomment when main loop added
-//            mIsRunning = false;
+            mIsRunning = false;
             if (mCommandThread.joinable())
             {
                 mCommandThread.join();
             }
-//            CloseHandle(hCommandPipe);
-//            CloseHandle(hResponsePipe);
+            CloseHandle(hCommandPipe);
+            CloseHandle(hResponsePipe);
         }
 
         void CConsoleHandler::command_handler()
@@ -159,7 +160,7 @@ namespace SolarSystem
                         // Process the commands here
                         if (command == "exit")
                         {
-                            log("Exiting...");
+                            log("Debugger connection closed...");
                             break;
                         }
                         else
@@ -196,6 +197,7 @@ namespace SolarSystem
 
         void CConsoleHandler::log(eLogLevel logLevel, const std::string& message) const
         {
+            std::unique_lock<std::mutex> lock(mtxLog);
             std::ostream& stream = get_ostream_from_level(logLevel);
             stream << get_current_datetime() << " | " << message << std::endl;
         }
