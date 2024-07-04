@@ -44,11 +44,11 @@ set(SOURCE_DIR source)
 
 set(SOURCES
     ${SOURCE_DIR}/main.cpp
-    ${SOURCE_DIR}/core/util/debug_writer.cpp
+    ${SOURCE_DIR}/core/util/console_handler.cpp
 )
 
 set(HEADERS
-    ${SOURCE_DIR}/core/util/debug_writer.h
+    ${SOURCE_DIR}/core/util/console_handler.h
 )
 
 include_directories(${HEADERS})
@@ -56,3 +56,6 @@ include_directories(${HEADERS})
 add_executable(SolarSystem ${SOURCES})
 
 target_link_libraries(SolarSystem glfw3 ${OPENGL_LIBRARY} opengl32)
+
+
+add_executable(SolarSystemDebugShell ${SOURCE_DIR}/core/util/command_shell.cpp)
