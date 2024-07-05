@@ -40,7 +40,8 @@ void sendCommand(HANDLE hPipe, HANDLE hResponsePipe)
                 throw std::runtime_error("Failed to write to pipeline.");
             }
             std::string cmd = command;
-            std::transform(cmd.begin(), cmd.end(), cmd.begin(), std::toupper);
+            std::transform(cmd.begin(), cmd.end(), cmd.begin(),
+                           [](unsigned char c){ return std::toupper(c); });
             if (cmd == "EXIT")
             {
                 break;

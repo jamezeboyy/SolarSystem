@@ -19,7 +19,9 @@ namespace SolarSystem
                 mDebugStream(std::cout),
                 mErrorStream(std::cerr)
         {
-            mCommandHandler.add_callback(eCommands::EXIT, this);
+//            mSetterCommandHandler.add_callback(eCommandsSetter::OBJ1, <obj class here>);
+            mTLCommandHandler.add_callback(eCommands::EXIT, this);
+            mTLCommandHandler.add_callback(eCommands::SET, &mSetterCommandHandler);
         }
 
         CConsoleHandler::CConsoleHandler(std::ostream& debugStream,
@@ -27,7 +29,7 @@ namespace SolarSystem
                 mDebugStream(debugStream),
                 mErrorStream(errorStream)
         {
-            mCommandHandler.add_callback(eCommands::EXIT, this);
+            mTLCommandHandler.add_callback(eCommands::EXIT, this);
         }
 
         void CConsoleHandler::start()
@@ -159,7 +161,7 @@ namespace SolarSystem
                         std::string command(buffer);
 
                         log("Received command: " + command);
-                        std::string response = mCommandHandler.handle(command);
+                        std::string response = mTLCommandHandler.handle(command);
                         DWORD bytesWritten;
                         WriteFile(hResponsePipe, response.c_str(), response.length(), &bytesWritten, nullptr);
 

@@ -7,6 +7,9 @@
 #include <functional>
 #include <map>
 #include <vector>
+#include <deque>
+#include <algorithm>
+#include <sstream>
 #include "command_callback.h"
 
 namespace SolarSystem
@@ -14,33 +17,56 @@ namespace SolarSystem
     namespace Core
     {
 
-        enum eCommands
-        {
-            EXIT,
-            HELP
-        };
 
-        class CCommandHandler
+        template<typename E> class CCommandHandler
         {
-        private:
+        protected:
 
             std::map<std::string, std::function<std::string(std::vector<std::string>&)>> mHandlerMap;
-            std::map<eCommands, CCommandCallbacker*> mCommandCallbackMap;
+            std::map<E, CCommandCallbacker*> mCommandCallbackMap;
 
         public:
 
-            CCommandHandler();
+            CCommandHandler()
+            {
 
-            std::string handle(const std::string& command);
+            }
 
-            std::string exit_handler(const std::vector<std::string>& parameters);
+            std::string handle(std::string& command)
+            {
+                std::string s;
+                std::stringstream ss(command);
 
-            std::string help_handler(const std::vector<std::string>& parameters);
+                std::deque<std::string> parsedInput;
 
-            void add_callback(eCommands command, CCommandCallbacker* callbacker);
+                while (getline(ss, s, ' '))
+                    parsedInput.push_back(s);
+
+                if (parsedInput.empty()) return "Failed: Command string is empty!";
+
+                std::string cmd = parsedInput.front();
+                parsedInput.pop_front();
+                std::transform(cmd.begin(), cmd.end(), cmd.begin(),
+                               [](unsigned char c){ return std::toupper(c); });
+
+                if (this->mHandlerMap.count(cmd) == 0) return "Unknown command!";
+
+                auto handlerFunc = this->mHandlerMap[cmd];
+
+                // TODO maybe more efficient way for this?
+                std::vector<std::string> params(parsedInput.begin(), parsedInput.end());
+                return handlerFunc(params);
+            }
+
+
+            void add_callback(E commandEnum, CCommandCallbacker* callbacker)
+            {
+                mCommandCallbackMap[commandEnum] = callbacker;
+            }
 
 
         };
+
     }
 }
 

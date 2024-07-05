@@ -11,7 +11,8 @@
 #include <vector>
 #include <windows.h>
 #include <thread>
-#include "command_handler.h"
+#include "tlcommand_handler.h"
+#include "settercommand_handler.h"
 
 
 namespace SolarSystem
@@ -38,7 +39,9 @@ namespace SolarSystem
         private:
             std::ostream& mDebugStream;
             std::ostream& mErrorStream;
-            CCommandHandler mCommandHandler;
+            CTLCommandHandler mTLCommandHandler;
+            CSetterCommandHandler mSetterCommandHandler;
+
 
             bool mIsRunning;
             HANDLE hCommandPipe;
