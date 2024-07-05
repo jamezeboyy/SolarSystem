@@ -19,7 +19,7 @@ namespace SolarSystem
                 mDebugStream(std::cout),
                 mErrorStream(std::cerr)
         {
-
+            mCommandHandler.add_callback(eCommands::EXIT, this);
         }
 
         CConsoleHandler::CConsoleHandler(std::ostream& debugStream,
@@ -27,7 +27,7 @@ namespace SolarSystem
                 mDebugStream(debugStream),
                 mErrorStream(errorStream)
         {
-
+            mCommandHandler.add_callback(eCommands::EXIT, this);
         }
 
         void CConsoleHandler::start()
@@ -41,14 +41,13 @@ namespace SolarSystem
 
             SECURITY_DESCRIPTOR sd;
             InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
-            SetSecurityDescriptorDacl(&sd, TRUE, nullptr, FALSE);  // Allow everyone full access
+            SetSecurityDescriptorDacl(&sd, TRUE, nullptr, FALSE);
 
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(SECURITY_ATTRIBUTES);
             sa.lpSecurityDescriptor = &sd;
             sa.bInheritHandle = FALSE;
 
-            // Create CommandPipe
             hCommandPipe = CreateNamedPipe(
                     COMMAND_PIPE_NAME,
                     PIPE_ACCESS_DUPLEX,
@@ -132,7 +131,9 @@ namespace SolarSystem
 
         void CConsoleHandler::stop()
         {
-            // TODO uncomment when main loop added
+            if(!mIsRunning) return;
+
+            log("Closing down debugger command connection...");
             mIsRunning = false;
             if (mCommandThread.joinable())
             {
@@ -157,20 +158,11 @@ namespace SolarSystem
                         buffer[bytesRead] = '\0';
                         std::string command(buffer);
 
-                        // Process the commands here
-                        if (command == "exit")
-                        {
-                            log("Debugger connection closed...");
-                            break;
-                        }
-                        else
-                        {
-                            log("Received command: " + command);
+                        log("Received command: " + command);
+                        std::string response = mCommandHandler.handle(command);
+                        DWORD bytesWritten;
+                        WriteFile(hResponsePipe, response.c_str(), response.length(), &bytesWritten, nullptr);
 
-                            std::string response = "Handling command " + command;
-                            DWORD bytesWritten;
-                            WriteFile(hResponsePipe, response.c_str(), response.length(), &bytesWritten, nullptr);
-                        }
                     }
                     else
                     {
@@ -194,7 +186,6 @@ namespace SolarSystem
             }
         }
 
-
         void CConsoleHandler::log(eLogLevel logLevel, const std::string& message) const
         {
             std::unique_lock<std::mutex> lock(mtxLog);
@@ -207,6 +198,11 @@ namespace SolarSystem
             log(eLogLevel::LOG_LEVEL_DEBUG, message);
         }
 
+        std::string CConsoleHandler::callback_handler(std::vector<std::string> parameters)
+        {
+            stop();
+            return "";
+        }
 
         std::ostream& CConsoleHandler::get_ostream_from_level(eLogLevel logLevel) const
         {

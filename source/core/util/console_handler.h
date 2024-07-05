@@ -11,6 +11,7 @@
 #include <vector>
 #include <windows.h>
 #include <thread>
+#include "command_handler.h"
 
 
 namespace SolarSystem
@@ -32,11 +33,12 @@ namespace SolarSystem
         };
 
 
-        class CConsoleHandler
+        class CConsoleHandler : public CCommandCallbacker
         {
         private:
             std::ostream& mDebugStream;
             std::ostream& mErrorStream;
+            CCommandHandler mCommandHandler;
 
             bool mIsRunning;
             HANDLE hCommandPipe;
@@ -58,6 +60,8 @@ namespace SolarSystem
             void log(eLogLevel logLevel, const std::string& message) const;
 
             void log(const std::string& message) const;
+
+            std::string callback_handler(std::vector<std::string> parameters) override;
 
         private:
 

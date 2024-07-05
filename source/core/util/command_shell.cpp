@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <iostream>
 #include <string>
-#include <thread>  // for std::this_thread::sleep_for
+#include <algorithm>
 
 const char* COMMAND_PIPE_NAME = R"(\\.\pipe\SolarSystemDebugCommandPipe)";
 const char* RESPONSE_PIPE_NAME = R"(\\.\pipe\SolarSystemDebugResponsePipe)";
@@ -39,8 +39,9 @@ void sendCommand(HANDLE hPipe, HANDLE hResponsePipe)
             {
                 throw std::runtime_error("Failed to write to pipeline.");
             }
-
-            if (command == "exit")
+            std::string cmd = command;
+            std::transform(cmd.begin(), cmd.end(), cmd.begin(), std::toupper);
+            if (cmd == "EXIT")
             {
                 break;
             }
