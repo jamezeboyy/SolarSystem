@@ -21,13 +21,10 @@ namespace SolarSystem
     namespace Core
     {
 
-        #define CON_DECLARE CConsoleHandler mConsoleHandler;
-        #define CON_INIT(debugStream, errorStream) mConsoleHandler(debugStream, errorStream);
+        #define LOG(message) CConsoleHandler::get_instance().log((std::stringstream{} << message).str());
+        #define LOGL(LEVEL, message) CConsoleHandler::get_instance().log(LEVEL, (std::stringstream{} << message).str());
 
-        #define LOG(message) mDebugWriter.log((std::stringstream{} << message).str());
-        #define LOGL(LEVEL, message) mDebugWriter.log(LEVEL, (std::stringstream{} << message).str());
-
-        #define LOG_POINT mDebugWriter.log((std::stringstream{} << __FILE__ << ":" << __LINE__).str());
+        #define LOG_POINT CConsoleHandler::get_instance().log((std::stringstream{} << __FILE__ << ":" << __LINE__).str());
 
         enum eLogLevel
         {

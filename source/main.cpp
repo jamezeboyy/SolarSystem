@@ -36,15 +36,19 @@ int main(int argc, char* argv[])
     // TODO move this into start somewhere..
     std::thread t1([&] {consoleHandler.start(startConsole);});
 
+    LOG_POINT
+
     bool b = true;
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
         // Render here
         if(b)
-            consoleHandler.log("Test");
-        else
-            consoleHandler.log("Hello");
-
+        {
+            LOG("Test");
+        }
+        else{
+            LOG("Hello");
+}
         // Swap front and back buffers
         glfwSwapBuffers(window);
 
