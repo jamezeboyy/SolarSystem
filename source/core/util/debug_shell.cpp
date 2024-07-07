@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 
+
 const char* COMMAND_PIPE_NAME = R"(\\.\pipe\SolarSystemDebugCommandPipe)";
 const char* RESPONSE_PIPE_NAME = R"(\\.\pipe\SolarSystemDebugResponsePipe)";
 const char* NAME = R"( _____   _____   _       _____   _____
@@ -21,7 +22,41 @@ const char* NAME = R"( _____   _____   _       _____   _____
 =======================================================================)";
 
 
-void sendCommand(HANDLE hPipe, HANDLE hResponsePipe)
+std::pair<HANDLE, HANDLE> connect()
+{
+    HANDLE hCommandPipe = CreateFile(
+            COMMAND_PIPE_NAME,
+            GENERIC_WRITE,
+            0,
+            nullptr,
+            OPEN_EXISTING,
+            0,
+            nullptr
+    );
+
+    HANDLE hResponsePipe = CreateFile(
+            RESPONSE_PIPE_NAME,
+            GENERIC_READ,
+            0,
+            nullptr,
+            OPEN_EXISTING,
+            0,
+            nullptr
+    );
+
+    if (hResponsePipe == INVALID_HANDLE_VALUE || hCommandPipe == INVALID_HANDLE_VALUE)
+    {
+        std::cerr << "Failed to connect to SolarSystem, check that the connection is open (" << GetLastError() << ").\n";
+        CloseHandle(hCommandPipe);
+        CloseHandle(hResponsePipe);
+        return std::pair(nullptr, nullptr);
+    }
+
+    return std::pair(hCommandPipe, hResponsePipe);
+}
+
+
+void handle_commands(HANDLE hPipe, HANDLE hResponsePipe)
 {
     std::string command;
     while (true)
@@ -79,46 +114,35 @@ void sendCommand(HANDLE hPipe, HANDLE hResponsePipe)
         catch (const std::exception& e)
         {
             std::cerr << "Exception caught: " << e.what() << "\n";
+            std::cout << "Trying to reconnect..." << std::endl;
+            std::pair<HANDLE, HANDLE> p = connect();
+            if (p.first == nullptr)
+                return;
+
+            std::cout << "Reconnected!" << std::endl;
+
+            hPipe = p.first;
+            hResponsePipe = p.second;
         }
     }
 }
 
+
+
 int main() {
     std::cout << NAME << std::endl;
 
-    HANDLE hCommandPipe = CreateFile(
-            COMMAND_PIPE_NAME,
-            GENERIC_WRITE,
-            0,
-            nullptr,
-            OPEN_EXISTING,
-            0,
-            nullptr
-    );
-
-    HANDLE hResponsePipe = CreateFile(
-            RESPONSE_PIPE_NAME,
-            GENERIC_READ,
-            0,
-            nullptr,
-            OPEN_EXISTING,
-            0,
-            nullptr
-    );
-
-    if (hResponsePipe == INVALID_HANDLE_VALUE || hCommandPipe == INVALID_HANDLE_VALUE)
-    {
-        std::cerr << "Failed to connect to SolarSystem, check that the connection is open (" << GetLastError() << ").\n";
-        CloseHandle(hCommandPipe);
-        CloseHandle(hResponsePipe);
+    std::pair<HANDLE, HANDLE> p = connect();
+    if (p.first == nullptr)
         return -1;
-    }
+
 
     std::cout << "Connected to the SolarSystem process. Type commands below:\n";
 
-    sendCommand(hCommandPipe, hResponsePipe);
+    handle_commands(p.first, p.second);
 
-    CloseHandle(hCommandPipe);
-    CloseHandle(hResponsePipe);
+
+//    CloseHandle(hCommandPipe);
+//    CloseHandle(hResponsePipe);
     return 0;
 }

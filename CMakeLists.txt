@@ -63,4 +63,4 @@ add_executable(SolarSystem ${HEADERS} ${SOURCES})
 target_link_libraries(SolarSystem glfw3 ${OPENGL_LIBRARY} opengl32)
 
 
-add_executable(SolarSystemDebugShell ${SOURCE_DIR}/core/util/command_shell.cpp)
+add_executable(SolarSystemDebugShell ${SOURCE_DIR}/core/util/debug_shell.cpp)
