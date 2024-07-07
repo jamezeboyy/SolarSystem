@@ -16,21 +16,24 @@ namespace SolarSystem
         std::mutex mtxLog;
 
         CConsoleHandler::CConsoleHandler() :
-                mDebugStream(std::cout),
-                mErrorStream(std::cerr)
+                mDebugStream(&std::cout),
+                mErrorStream(&std::cerr),
+                mIsRunning(false),
+                hCommandPipe(nullptr),
+                hResponsePipe(nullptr)
+
+
         {
 //            mSetterCommandHandler.add_callback(eCommandsSetter::OBJ1, <obj class here>);
             mTLCommandHandler.add_callback(eCommands::EXIT, this);
             mTLCommandHandler.add_callback(eCommands::SET, &mSetterCommandHandler);
         }
 
-        CConsoleHandler::CConsoleHandler(std::ostream& debugStream,
-                                         std::ostream& errorStream) :
-                mDebugStream(debugStream),
-                mErrorStream(errorStream)
+        CConsoleHandler::~CConsoleHandler()
         {
-            mTLCommandHandler.add_callback(eCommands::EXIT, this);
+            delete instance;
         }
+
 
         void CConsoleHandler::start()
         {
@@ -135,7 +138,6 @@ namespace SolarSystem
         {
             if(!mIsRunning) return;
 
-            log("Closing down debugger command connection...");
             mIsRunning = false;
             if (mCommandThread.joinable())
             {
@@ -191,8 +193,8 @@ namespace SolarSystem
         void CConsoleHandler::log(eLogLevel logLevel, const std::string& message) const
         {
             std::unique_lock<std::mutex> lock(mtxLog);
-            std::ostream& stream = get_ostream_from_level(logLevel);
-            stream << get_current_datetime() << " | " << message << std::endl;
+            std::ostream* stream = get_ostream_from_level(logLevel);
+            (*stream) << get_current_datetime() << " | " << message << std::endl;
         }
 
         void CConsoleHandler::log(const std::string& message) const
@@ -202,11 +204,12 @@ namespace SolarSystem
 
         std::string CConsoleHandler::callback_handler(std::vector<std::string> parameters)
         {
-            stop();
+            log("Closing down debugger command connection...");
+            mIsRunning = false;
             return "";
         }
 
-        std::ostream& CConsoleHandler::get_ostream_from_level(eLogLevel logLevel) const
+        std::ostream* CConsoleHandler::get_ostream_from_level(eLogLevel logLevel) const
         {
             switch (logLevel)
             {
@@ -218,7 +221,6 @@ namespace SolarSystem
                     return mDebugStream;
             }
         }
-
 
         std::string CConsoleHandler::get_current_datetime()
         {
@@ -237,6 +239,35 @@ namespace SolarSystem
                << '.' << std::setfill('0')
                << std::setw(3) << millis.count();
             return ss.str();
+        }
+
+        void CConsoleHandler::register_set_callback()
+        {
+
+        }
+
+        void CConsoleHandler::register_tl_callback()
+        {
+
+        }
+
+        void CConsoleHandler::set_debug_stream(std::ostream& debugStream)
+        {
+            mDebugStream = &debugStream;
+        }
+
+        void CConsoleHandler::set_error_stream(std::ostream& errorStream)
+        {
+            mErrorStream = &errorStream;
+        }
+
+        CConsoleHandler* CConsoleHandler::get_instance()
+        {
+            if(instance == nullptr)
+            {
+                instance = new CConsoleHandler();
+            }
+            return instance;
         }
 
     }

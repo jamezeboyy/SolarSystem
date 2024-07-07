@@ -37,8 +37,8 @@ namespace SolarSystem
         class CConsoleHandler : public CCommandCallbacker
         {
         private:
-            std::ostream& mDebugStream;
-            std::ostream& mErrorStream;
+            std::ostream* mDebugStream;
+            std::ostream* mErrorStream;
             CTLCommandHandler mTLCommandHandler;
             CSetterCommandHandler mSetterCommandHandler;
 
@@ -48,11 +48,12 @@ namespace SolarSystem
             HANDLE hResponsePipe;
             std::thread mCommandThread;
 
+            static CConsoleHandler* instance;
+
+
         public:
 
-            CConsoleHandler();
-
-            CConsoleHandler(std::ostream& debugStream, std::ostream& errorStream);
+            ~CConsoleHandler();
 
             void start();
 
@@ -66,11 +67,27 @@ namespace SolarSystem
 
             std::string callback_handler(std::vector<std::string> parameters) override;
 
+            void register_set_callback();
+
+            void register_tl_callback();
+
+            void set_debug_stream(std::ostream& debugStream);
+
+            void set_error_stream(std::ostream& errorStream);
+
+            static CConsoleHandler* get_instance();
+
+            CConsoleHandler(CConsoleHandler& inst) = delete;
+
+            void operator=(const CConsoleHandler& inst) = delete;
+
         private:
+
+            CConsoleHandler();
 
             void command_handler();
 
-            std::ostream& get_ostream_from_level(eLogLevel logLevel) const;
+            std::ostream* get_ostream_from_level(eLogLevel logLevel) const;
 
             static std::string get_current_datetime();
 

@@ -42,6 +42,7 @@ void sendCommand(HANDLE hPipe, HANDLE hResponsePipe)
             std::string cmd = command;
             std::transform(cmd.begin(), cmd.end(), cmd.begin(),
                            [](unsigned char c){ return std::toupper(c); });
+
             if (cmd == "EXIT")
             {
                 break;
