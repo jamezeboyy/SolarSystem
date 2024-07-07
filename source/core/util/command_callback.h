@@ -13,7 +13,7 @@ namespace SolarSystem
         class CCommandCallbacker
         {
         public:
-            virtual std::string callback_handler(std::vector<std::string> parameters) = 0;
+            virtual std::string callback_handler(std::string cmd, std::vector<std::string> parameters) = 0;
 
         };
     }

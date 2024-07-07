@@ -31,15 +31,19 @@ int main(int argc, char* argv[])
     glfwMakeContextCurrent(window);
 
     using namespace SolarSystem::Core;
-    CConsoleHandler* consoleHandler = CConsoleHandler::get_instance();
+    CConsoleHandler& consoleHandler = CConsoleHandler::get_instance();
 
     // TODO move this into start somewhere..
-    std::thread t1([&] {consoleHandler->start(startConsole);});
+    std::thread t1([&] {consoleHandler.start(startConsole);});
 
+    bool b = true;
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
         // Render here
-        consoleHandler->log("Test");
+        if(b)
+            consoleHandler.log("Test");
+        else
+            consoleHandler.log("Hello");
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -47,12 +51,13 @@ int main(int argc, char* argv[])
         // Poll for and process events
         glfwPollEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        b = !b;
     }
 
     glfwDestroyWindow(window);
     glfwTerminate();
     t1.join();
-    consoleHandler->stop();
+    consoleHandler.stop();
     return 0;
 }
 

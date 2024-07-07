@@ -22,15 +22,12 @@ namespace SolarSystem
         {
         protected:
 
-            std::map<std::string, std::function<std::string(std::vector<std::string>&)>> mHandlerMap;
+            std::map<std::string, std::function<std::string(std::string, std::vector<std::string>&)>> mHandlerMap;
             std::map<E, CCommandCallbacker*> mCommandCallbackMap;
 
         public:
 
-            CCommandHandler()
-            {
-
-            }
+            CCommandHandler() = default;
 
             std::string handle(std::string& command)
             {
@@ -55,7 +52,7 @@ namespace SolarSystem
 
                 // TODO maybe more efficient way for this?
                 std::vector<std::string> params(parsedInput.begin(), parsedInput.end());
-                return handlerFunc(params);
+                return handlerFunc(cmd, params);
             }
 
 

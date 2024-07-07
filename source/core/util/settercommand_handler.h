@@ -21,11 +21,11 @@ namespace SolarSystem
         public:
             CSetterCommandHandler();
 
-            std::string callback_handler(std::vector<std::string> parameters) override;
+            std::string callback_handler(std::string cmd, std::vector<std::string> parameters) override;
 
         private:
 
-            std::string obj_set_handler(const std::vector<std::string>& parameters);
+            std::string obj_set_handler(const std::string cmd, const std::vector<std::string>& parameters);
 
         };
 

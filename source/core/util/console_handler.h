@@ -15,10 +15,12 @@
 #include "settercommand_handler.h"
 
 
+
 namespace SolarSystem
 {
     namespace Core
     {
+
         #define CON_DECLARE CConsoleHandler mConsoleHandler;
         #define CON_INIT(debugStream, errorStream) mConsoleHandler(debugStream, errorStream);
 
@@ -42,13 +44,15 @@ namespace SolarSystem
             CTLCommandHandler mTLCommandHandler;
             CSetterCommandHandler mSetterCommandHandler;
 
-
             bool mIsRunning;
             HANDLE hCommandPipe;
             HANDLE hResponsePipe;
             std::thread mCommandThread;
 
-            static CConsoleHandler* instance;
+            bool mShouldLogThread;
+            bool mShouldLogLevel;
+            std::string mLogFilter;
+
 
 
         public:
@@ -65,17 +69,17 @@ namespace SolarSystem
 
             void log(const std::string& message) const;
 
-            std::string callback_handler(std::vector<std::string> parameters) override;
+            std::string callback_handler(std::string cmd, std::vector<std::string> parameters) override;
 
-            void register_set_callback();
+            void register_set_callback(eCommandsSetter command, CCommandCallbacker* callbacker);
 
-            void register_tl_callback();
+            void register_tl_callback(eCommands command, CCommandCallbacker* callbacker);
 
             void set_debug_stream(std::ostream& debugStream);
 
             void set_error_stream(std::ostream& errorStream);
 
-            static CConsoleHandler* get_instance();
+            static CConsoleHandler& get_instance();
 
             CConsoleHandler(CConsoleHandler& inst) = delete;
 

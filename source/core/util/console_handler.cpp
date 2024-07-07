@@ -4,6 +4,7 @@
 
 #include <thread>
 #include <mutex>
+#include <regex>
 
 namespace SolarSystem
 {
@@ -20,19 +21,20 @@ namespace SolarSystem
                 mErrorStream(&std::cerr),
                 mIsRunning(false),
                 hCommandPipe(nullptr),
-                hResponsePipe(nullptr)
+                hResponsePipe(nullptr),
+                mShouldLogThread(false),
+                mShouldLogLevel(false),
+                mLogFilter("NONE")
 
 
         {
 //            mSetterCommandHandler.add_callback(eCommandsSetter::OBJ1, <obj class here>);
             mTLCommandHandler.add_callback(eCommands::EXIT, this);
+            mTLCommandHandler.add_callback(eCommands::LOG, this);
             mTLCommandHandler.add_callback(eCommands::SET, &mSetterCommandHandler);
         }
 
-        CConsoleHandler::~CConsoleHandler()
-        {
-            delete instance;
-        }
+        CConsoleHandler::~CConsoleHandler() = default;
 
 
         void CConsoleHandler::start()
@@ -194,7 +196,39 @@ namespace SolarSystem
         {
             std::unique_lock<std::mutex> lock(mtxLog);
             std::ostream* stream = get_ostream_from_level(logLevel);
+
+
+            if (mLogFilter != "NONE")
+            {
+                std::regex filterRegex(mLogFilter);
+                if (!std::regex_search(message, filterRegex))
+                    return;
+            }
+
+
+            if (mShouldLogLevel)
+            {
+                std::string level;
+                switch (logLevel)
+                {
+                    case eLogLevel::LOG_LEVEL_DEBUG:
+                        level = "DEBUG";
+                        break;
+                    case eLogLevel::LOG_LEVEL_ERROR:
+                        level = "ERROR";
+                        break;
+                    default:
+                        level = "UNKNOWN";
+                        break;
+                }
+                (*stream) << "[" << level << "] ";
+            }
+
+            if (mShouldLogThread)
+                (*stream) << "(" <<  std::this_thread::get_id() << ") ";
+
             (*stream) << get_current_datetime() << " | " << message << std::endl;
+
         }
 
         void CConsoleHandler::log(const std::string& message) const
@@ -202,11 +236,57 @@ namespace SolarSystem
             log(eLogLevel::LOG_LEVEL_DEBUG, message);
         }
 
-        std::string CConsoleHandler::callback_handler(std::vector<std::string> parameters)
+        std::string CConsoleHandler::callback_handler(std::string cmd, std::vector<std::string> parameters)
         {
-            log("Closing down debugger command connection...");
-            mIsRunning = false;
-            return "";
+            if(cmd == "EXIT")
+            {
+                log("Closing down debugger command connection...");
+                mIsRunning = false;
+
+            }
+            else if(cmd == "LOG")
+            {
+                if (parameters.empty())
+                {
+                    return (std::stringstream{} << "Log settings | Thread: " << mShouldLogThread
+                                                << ", Level: " << mShouldLogLevel
+                                                << ", Filter: " << mLogFilter).str();
+                }
+                else
+                {
+                    std::string type = parameters[0];
+                    if (type == "thread")
+                    {
+                        if (parameters.size() > 1)
+                        {
+                            mShouldLogThread = (parameters[1] == "true" || parameters[1] == "1");
+                        }
+                        return std::to_string(mShouldLogThread);
+                    }
+                    else if(type == "level")
+                    {
+                        if (parameters.size() > 1)
+                        {
+                            mShouldLogLevel = (parameters[1] == "true" || parameters[1] == "1");
+                        }
+                        return std::to_string(mShouldLogLevel);
+                    }
+                    else if(type == "filter")
+                    {
+                        if (parameters.size() > 1)
+                        {
+                            mLogFilter = parameters[1];
+                        }
+                        return mLogFilter;
+                    }
+                    else
+                    {
+                        return "Unknown log parameters!";
+                    }
+                }
+            }
+            return "Unknown parameters!";
+
         }
 
         std::ostream* CConsoleHandler::get_ostream_from_level(eLogLevel logLevel) const
@@ -221,6 +301,8 @@ namespace SolarSystem
                     return mDebugStream;
             }
         }
+
+
 
         std::string CConsoleHandler::get_current_datetime()
         {
@@ -241,14 +323,14 @@ namespace SolarSystem
             return ss.str();
         }
 
-        void CConsoleHandler::register_set_callback()
+        void CConsoleHandler::register_set_callback(eCommandsSetter command, CCommandCallbacker* callbacker)
         {
-
+            mSetterCommandHandler.add_callback(command, callbacker);
         }
 
-        void CConsoleHandler::register_tl_callback()
+        void CConsoleHandler::register_tl_callback(eCommands command, CCommandCallbacker* callbacker)
         {
-
+            mTLCommandHandler.add_callback(command, callbacker);
         }
 
         void CConsoleHandler::set_debug_stream(std::ostream& debugStream)
@@ -261,12 +343,9 @@ namespace SolarSystem
             mErrorStream = &errorStream;
         }
 
-        CConsoleHandler* CConsoleHandler::get_instance()
+        CConsoleHandler& CConsoleHandler::get_instance()
         {
-            if(instance == nullptr)
-            {
-                instance = new CConsoleHandler();
-            }
+            static CConsoleHandler instance;
             return instance;
         }
 
