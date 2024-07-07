@@ -46,92 +46,99 @@ namespace SolarSystem
         {
             mIsRunning = true;
 
-            SECURITY_DESCRIPTOR sd;
-            InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
-            SetSecurityDescriptorDacl(&sd, TRUE, nullptr, FALSE);
-
-            SECURITY_ATTRIBUTES sa;
-            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-            sa.lpSecurityDescriptor = &sd;
-            sa.bInheritHandle = FALSE;
-
-            hCommandPipe = CreateNamedPipe(
-                    COMMAND_PIPE_NAME,
-                    PIPE_ACCESS_DUPLEX,
-                    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                    1,
-                    1024,
-                    1024,
-                    0,
-                    &sa
-            );
-
-            hResponsePipe = CreateNamedPipe(
-                    RESPONSE_PIPE_NAME,
-                    PIPE_ACCESS_DUPLEX,
-                    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                    1,
-                    1024,
-                    1024,
-                    0,
-                    &sa
-            );
-
-            if (hCommandPipe == INVALID_HANDLE_VALUE || hResponsePipe == INVALID_HANDLE_VALUE )
+            mStartThread = std::thread([this, startConsole]
             {
-                log(LOG_LEVEL_ERROR, "Failed to create pipes.");
-                return;
-            }
+               SECURITY_DESCRIPTOR sd;
+               InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
+               SetSecurityDescriptorDacl(&sd, TRUE, nullptr, FALSE);
 
-            log("Opened connection. Waiting for debug command shell to connect...");
+               SECURITY_ATTRIBUTES sa;
+               sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+               sa.lpSecurityDescriptor = &sd;
+               sa.bInheritHandle = FALSE;
 
-            if (startConsole)
-            {
-                STARTUPINFO si;
-                PROCESS_INFORMATION pi;
+               hCommandPipe = CreateNamedPipe(
+                       COMMAND_PIPE_NAME,
+                       PIPE_ACCESS_DUPLEX,
+                       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                       1,
+                       1024,
+                       1024,
+                       0,
+                       &sa
+               );
 
-                ZeroMemory(&si, sizeof(si));
-                si.cb = sizeof(si);
-                si.dwFlags = STARTF_USESHOWWINDOW;
-                si.wShowWindow = SW_SHOW;
+               hResponsePipe = CreateNamedPipe(
+                       RESPONSE_PIPE_NAME,
+                       PIPE_ACCESS_DUPLEX,
+                       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                       1,
+                       1024,
+                       1024,
+                       0,
+                       &sa
+               );
 
-                ZeroMemory(&pi, sizeof(pi));
+               if (hCommandPipe == INVALID_HANDLE_VALUE || hResponsePipe == INVALID_HANDLE_VALUE)
+               {
+                   log(LOG_LEVEL_ERROR, "Failed to create pipes.");
+                   return;
+               }
 
-                log("Starting debug shell process...");
-                const char *cmd = "cmd.exe /C start SolarSystemDebugShell.exe";
+               log("Opened connection. Waiting for debug command shell to connect...");
 
-                if (!CreateProcess(nullptr,
-                                   const_cast<char *>(cmd),
-                                   nullptr,
-                                   nullptr,
-                                   FALSE,
-                                   CREATE_NEW_CONSOLE,
-                                   nullptr,
-                                   nullptr,
-                                   &si,
-                                   &pi))
-                {
-                    log(LOG_LEVEL_ERROR, "Failed to create terminal: " + std::to_string(GetLastError()));
-                    return;
-                }
+               if (startConsole)
+               {
+                   STARTUPINFO si;
+                   PROCESS_INFORMATION pi;
 
-                CloseHandle(pi.hProcess);
-                CloseHandle(pi.hThread);
-            }
+                   ZeroMemory(&si, sizeof(si));
+                   si.cb = sizeof(si);
+                   si.dwFlags = STARTF_USESHOWWINDOW;
+                   si.wShowWindow = SW_SHOW;
+
+                   ZeroMemory(&pi, sizeof(pi));
+
+                   log("Starting debug shell process...");
+                   const char *cmd = "cmd.exe /C start SolarSystemDebugShell.exe";
+
+                   if (!CreateProcess(nullptr,
+                                      const_cast<char *>(cmd),
+                                      nullptr,
+                                      nullptr,
+                                      FALSE,
+                                      CREATE_NEW_CONSOLE,
+                                      nullptr,
+                                      nullptr,
+                                      &si,
+                                      &pi))
+                   {
+                       log(LOG_LEVEL_ERROR,
+                           "Failed to create terminal: " + std::to_string(GetLastError()));
+                       return;
+                   }
+
+                   CloseHandle(pi.hProcess);
+                   CloseHandle(pi.hThread);
+               }
 
 
-            BOOL connectedCommand = ConnectNamedPipe(hCommandPipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
-            BOOL connectedResponse = ConnectNamedPipe(hResponsePipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+               BOOL connectedCommand = ConnectNamedPipe(hCommandPipe, nullptr) ? TRUE : (
+                       GetLastError() == ERROR_PIPE_CONNECTED);
+               BOOL connectedResponse = ConnectNamedPipe(hResponsePipe, nullptr) ? TRUE : (
+                       GetLastError() == ERROR_PIPE_CONNECTED);
 
-            if (!connectedCommand || !connectedResponse)
-            {
-                log(LOG_LEVEL_ERROR, "Connecting to debugger failed: "  + std::to_string(GetLastError()));
-                CloseHandle(hCommandPipe);
-                CloseHandle(hResponsePipe);
-                return;
-            }
+               if (!connectedCommand || !connectedResponse)
+               {
+                   log(LOG_LEVEL_ERROR,
+                       "Connecting to debugger failed: " + std::to_string(GetLastError()));
+                   CloseHandle(hCommandPipe);
+                   CloseHandle(hResponsePipe);
+                   return;
+               }
 
-            log("Debug command shell connected. Now Handling commands...");
+               log("Debug command shell connected. Now Handling commands...");
+            });
 
             mCommandThread = std::thread(&CConsoleHandler::command_handler, this);
         }
@@ -141,10 +148,12 @@ namespace SolarSystem
             if(!mIsRunning) return;
 
             mIsRunning = false;
-            if (mCommandThread.joinable())
-            {
+
+            if (mStartThread.joinable())
+                mStartThread.join();
+            else if (mCommandThread.joinable())
                 mCommandThread.join();
-            }
+
             CloseHandle(hCommandPipe);
             CloseHandle(hResponsePipe);
         }
@@ -153,6 +162,9 @@ namespace SolarSystem
         {
             char buffer[1024];
             DWORD bytesRead;
+
+            if (mStartThread.joinable())
+                mStartThread.join();
 
             while (mIsRunning)
             {
@@ -190,6 +202,8 @@ namespace SolarSystem
                     break;
                 }
             }
+            // TODO make this reopen pipe, complicated give we can NOT start while in this thread..
+            // TODO Need to poll or notify in someway requires addition thread just for restarting, seems overkill idk...
         }
 
         void CConsoleHandler::log(eLogLevel logLevel, const std::string& message) const

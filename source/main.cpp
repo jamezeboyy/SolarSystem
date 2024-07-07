@@ -33,8 +33,7 @@ int main(int argc, char* argv[])
     using namespace SolarSystem::Core;
     CConsoleHandler& consoleHandler = CConsoleHandler::get_instance();
 
-    // TODO move this into start somewhere..
-    std::thread t1([&] {consoleHandler.start(startConsole);});
+    consoleHandler.start(startConsole);
 
     LOG_POINT
 
@@ -60,7 +59,7 @@ int main(int argc, char* argv[])
 
     glfwDestroyWindow(window);
     glfwTerminate();
-    t1.join();
+
     consoleHandler.stop();
     return 0;
 }

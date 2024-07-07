@@ -45,6 +45,7 @@ namespace SolarSystem
             HANDLE hCommandPipe;
             HANDLE hResponsePipe;
             std::thread mCommandThread;
+            std::thread mStartThread;
 
             bool mShouldLogThread;
             bool mShouldLogLevel;
