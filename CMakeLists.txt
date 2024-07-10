@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(SolarSystem)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 if(WIN32)
@@ -44,8 +44,23 @@ set(SOURCE_DIR source)
 
 set(SOURCES
     ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/core/util/console_handler.cpp
+    ${SOURCE_DIR}/core/util/settercommand_handler.cpp
+    ${SOURCE_DIR}/core/util/tlcommand_handler.cpp
 )
 
-add_executable(SolarSystem ${SOURCES})
+set(HEADERS
+    ${SOURCE_DIR}/core/util/console_handler.h
+    ${SOURCE_DIR}/core/util/command_handler.h
+    ${SOURCE_DIR}/core/util/command_callback.h
+    ${SOURCE_DIR}/core/util/settercommand_handler.h
+    ${SOURCE_DIR}/core/util/tlcommand_handler.h
+)
+
+
+add_executable(SolarSystem ${HEADERS} ${SOURCES})
 
 target_link_libraries(SolarSystem glfw3 ${OPENGL_LIBRARY} opengl32)
+
+
+add_executable(SolarSystemDebugShell ${SOURCE_DIR}/core/util/debug_shell.cpp)
