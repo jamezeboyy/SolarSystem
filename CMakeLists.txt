@@ -32,9 +32,10 @@ set(OPENGL_LIBRARY C:/Program Files \(x86\)/Windows Kits/10/Lib/${WINDOW_BUILD_V
 set(OPENGL_DLL C:/Windows/System32/opengl32.dll)
 set(OPENGL_INCLUDE_DIR "C:/Program Files (x86)/Windows Kits/10/Include/${WINDOW_BUILD_VER}/um")
 
-include_directories(${OPENGL_INCLUDE_DIR})
-
 include_directories(${PROJECT_SOURCE_DIR}/include/${ARCHITECTURE})
+
+include_directories(${OPENGL_INCLUDE_DIR} include/common)
+
 link_directories(${PROJECT_SOURCE_DIR}/lib/${ARCHITECTURE})
 
 find_package(OpenGL REQUIRED)
@@ -43,6 +44,7 @@ set(SOURCE_DIR source)
 
 
 set(SOURCES
+    ${SOURCE_DIR}/glad.c
     ${SOURCE_DIR}/main.cpp
 )
 
