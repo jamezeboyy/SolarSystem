@@ -1,8 +1,0 @@
-# ninja log v6
-6	169	7798517637047752	CMakeFiles/SolarSystem.dir/source/glad.c.obj	6711932884809066
-8	227	7798517637077757	CMakeFiles/SolarSystem.dir/source/main.cpp.obj	acd0f4ee0f1dc9fd
-227	425	7798517639268274	SolarSystem.exe	e8232706b77917e8
-4	231	7798520383456887	CMakeFiles/SolarSystem.dir/source/main.cpp.obj	acd0f4ee0f1dc9fd
-231	335	7798520385730878	SolarSystem.exe	e8232706b77917e8
-13	238	7798521095187409	CMakeFiles/SolarSystem.dir/source/main.cpp.obj	acd0f4ee0f1dc9fd
-239	333	7798521097447941	SolarSystem.exe	e8232706b77917e8
