@@ -1,0 +1,1 @@
+sudo apt-get install mesa-common-dev freeglut3 freeglut3-dev libglfw3-dev
